@@ -54,6 +54,10 @@
 	$lang['finish_time'] = '完成时间';
 	$lang['review_order'] = '审核订单';
 	$lang['change_expiration'] = '修改到期时间';
+	$lang['reject_order'] = '拒绝订单';
+	$lang['batch_review_pass'] = '批量审核订单';
+	$lang['batch_review_reject'] = '批量拒绝订单';
+	$lang['reverse_select'] = '反选';
 
 //pay_check
 	$lang['pay_check_message'] = '正在检查订单状态……';

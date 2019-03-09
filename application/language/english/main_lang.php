@@ -54,6 +54,10 @@
 	$lang['finish_time'] = 'Finish Time';
 	$lang['review_order'] = 'Review Order';
 	$lang['change_expiration'] = 'Change expiration';
+	$lang['reject_order'] = 'Reject Order';
+	$lang['batch_review_pass'] = 'Batch Review Order';
+	$lang['batch_review_reject'] = 'Batch Reject Order';
+	$lang['reverse_select'] = 'Reverse Select';
 
 //pay_check
 	$lang['pay_check_message'] = 'Checking payment result...';
