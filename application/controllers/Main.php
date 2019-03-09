@@ -149,14 +149,15 @@ class Main extends MY_Controller {
 		$notify_url = base_url('main/pay_notify');
 		$return_url = base_url('#main/pay_check');
 
-		// $orderid = 1;
-		$orderid = $this->payment->new_order($uid, $name, $item, ($price > 0) ? $istype : 0, $this->user->load_expiration($uid));
-
 		$old_expiration = $this->user->load_expiration($uid);
 		if ($this->user->uid_check($uid) && ($old_expiration == NULL || strtotime($old_expiration) < time() || strtotime($old_expiration) > time() + $this->config->item('expire_notify_day_num') * 24 * 60 * 60))
 			$illegal = lang('form_no_need_to_pay');
-		elseif ($orderid == -2)
-			$illegal = lang('form_order_is_reviewing');
+		else {
+			// $orderid = 1;
+			$orderid = $this->payment->new_order($uid, $name, $item, ($price > 0) ? $istype : 0, $this->user->load_expiration($uid));
+			if ($orderid == -2)
+				$illegal = lang('form_order_is_reviewing');
+		}
 		if (isset($illegal)){
 			$this->load->view('pay',array(
 				'pay_item' => $this->payment->get_items_list(),
