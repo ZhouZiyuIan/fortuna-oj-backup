@@ -208,7 +208,7 @@ class Misc extends MY_Controller {
 			'submission' => json_decode($get['submission'])
 		);
 		$ret = $this->network->jsonrpc_call($server,'run',$params);
-		if (!isset($ret)) $ret=(object)array('error'=>"JSON ERROR (MAY CONTAINING ILLEGAL CHARACTER): ".json_last_error());
+		if (!isset($ret)) $ret=(object)array('error'=>"JSON ERROR: ".json_last_error_msg());
 		//var_dump($ret);
 
 		$time = $memory = $codeLength = $language = $status = null;
