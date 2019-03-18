@@ -141,11 +141,16 @@ class MY_Session_redis_driver extends CI_Session_redis_driver
 			}
 
 			// Patch begin
-            $result = $this->_redis->set($lock_key, time(), array('nx', 'ex' => 300));
-            if (! $result)
-            {
-                usleep(100000);
-                continue;
+			if ($ttl === -2 && ! $this->_redis->set($lock_key, time(), array('nx', 'ex' => 300)))
+			{
+				// Sleep for 1s to wait for lock releases.
+				sleep(1);
+				continue;
+			}
+			elseif ( ! $this->_redis->setex($lock_key, 300, time()))
+			{
+				log_message('error', 'Session: Error while trying to obtain lock for '.$this->_key_prefix.$session_id);
+				return FALSE;
 			}
 			// Patch end
 
