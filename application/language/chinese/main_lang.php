@@ -274,6 +274,11 @@
 	$lang['global_settings_item_key_allow_custom_test'] = '允许自定义测试';
 	$lang['global_settings_item_description_allow_custom_test'] = '打开自定义测试功能';
 
+//admin_manage_user
+	$lang['set_no_expiration'] = '设为无限期';
+	$lang['batch_change_expiration'] = '批量修改到期时间';
+	$lang['delete_unused_user'] = '删除 %s 个未使用的用户';
+
 //form validation
 	$lang['form_user_not_exist'] = '用户名不存在！';
 	

@@ -538,6 +538,16 @@ class Admin extends MY_Controller {
 	{
 		$this->user->change_priviledge($uid, $priviledge);
 	}
+
+	function change_expiration()
+	{
+		$names = json_decode($this->input->post('names', TRUE));
+		$datetime = $this->input->post('datetime');
+
+		foreach ($names as $name)
+			$this->user->set_expiration($this->user->load_uid($name), $datetime);
+		$this->load->view('success');
+	}
 	
 	function delete_user($uid){
 		$this->user->delete($uid);

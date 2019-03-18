@@ -274,6 +274,11 @@
 	$lang['global_settings_item_key_allow_custom_test'] = 'Allow Custom Test';
 	$lang['global_settings_item_description_allow_custom_test'] = 'Turn on Custom Test function';
 
+//admin_manage_user
+	$lang['set_no_expiration'] = 'No Expiration';
+	$lang['batch_change_expiration'] = 'Batch Change Expiration';
+	$lang['delete_unused_user'] = 'Delete %s unused users';
+
 //form validation
 	$lang['form_user_not_exist'] = 'User does not exist!';
 	
