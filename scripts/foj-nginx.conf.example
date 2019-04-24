@@ -1,0 +1,35 @@
+server {
+	listen 80;
+	listen [::]:80;
+	
+	root /var/www;
+	index index.html index.php;
+	
+	fastcgi_connect_timeout 600s;
+	fastcgi_send_timeout 600s;
+	fastcgi_read_timeout 600s;
+
+	location ~* \.(ico|css|js|gif|jpe?g|png)(\?[0-9]+)?$ {
+		expires max;
+		log_not_found off;
+	}
+
+	location = / {
+		return 302 /{{oj_name}};
+	}
+
+	location ~* /{{oj_name}}/(overriding_config|application|migrate|scripts|system|.git) {
+		if ($request_uri !~* /{{oj_name}}/application/third_party/) {
+			return 403;
+		}
+	}
+
+	location /{{oj_name}} {
+		try_files $uri $uri/ /{{oj_name}}/index.php;
+	}
+	
+	location ~* \.php$ {
+		fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+		include fastcgi.conf;
+	}
+}

@@ -538,6 +538,16 @@ class Admin extends MY_Controller {
 	{
 		$this->user->change_priviledge($uid, $priviledge);
 	}
+
+	function change_expiration()
+	{
+		$names = json_decode($this->input->post('names', TRUE));
+		$datetime = $this->input->post('datetime');
+
+		foreach ($names as $name)
+			$this->user->set_expiration($this->user->load_uid($name), $datetime);
+		$this->load->view('success');
+	}
 	
 	function delete_user($uid){
 		$this->user->delete($uid);
@@ -981,18 +991,29 @@ class Admin extends MY_Controller {
 	}
 
 	public function review_order(){
-		$orderid = $this->input->post('orderid');
-		$expiration = $this->input->post('datetime');
+		$orderid_arr = json_decode($this->input->post('orderid'));
+		$global_expiration = $this->input->post('datetime');
 
 		$this->load->model('payment');
-		$this->payment->review_order($orderid, $expiration);
-		$this->user->set_expiration($this->payment->get_order($orderid)->uid, $expiration);
+		foreach ($orderid_arr as $orderid){
+			$order = $this->payment->get_order($orderid);
+			if (isset($global_expiration))
+				$expiration = $global_expiration;
+			else
+				$expiration = $order->expiration;
+
+			$this->payment->review_order($orderid, $expiration);
+			$this->user->set_expiration($order->uid, $expiration);
+		}
 		$this->load->view('success');
 	}
 
-	public function reject_order($orderid){
+	public function reject_order(){
+		$orderid_arr = json_decode($this->input->post('orderid'));
+
 		$this->load->model('payment');
-		$this->payment->reject_order($orderid);
+		foreach ($orderid_arr as $orderid)
+			$this->payment->reject_order($orderid);
 		$this->load->view('success');
 	}
 

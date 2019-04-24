@@ -4,20 +4,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class MY_Session_redis_driver extends CI_Session_redis_driver
 {
+
 	/**
-	 * Key exists flag
+	 * Class constructor (from commit 7ec458b45316b9f270e1e03de498244f71c605ea on branch develop)
 	 *
-	 * @var bool
+	 * @param	array	$params	Configuration parameters
+	 * @return	void
 	 */
-	protected $_key_exists = FALSE;
-
-	public function close()
-	{
-		$ret = parent::close();
-		$this->_lock_key = NULL;
-		return $ret;
-	}
-
 	public function __construct(&$params)
 	{
 		CI_Session_driver::__construct($params);
@@ -26,68 +19,71 @@ class MY_Session_redis_driver extends CI_Session_redis_driver
 		{
 			log_message('error', 'Session: No Redis save path configured.');
 		}
-		elseif (preg_match('#^unix://([^\?]+)(\?.+)?$#', $this->_config['save_path'], $matches))
+		elseif (preg_match('#^unix://([^\?]+)(?<options>\?.+)?$#', $this->_config['save_path'], $matches))
 		{
-			isset($matches[2]) OR $matches[2] = '';
-			$this->_config['save_path'] = array(
-					'type' => 'unix',
-					'path' => $matches[1],
-					'password' => preg_match('#auth=([^\s&]+)#', $matches[2], $match) ? $match[1] : NULL,
-					'database' => preg_match('#database=(\d+)#', $matches[2], $match) ? (int) $match[1] : NULL,
-					'timeout' => preg_match('#timeout=(\d+\.\d+)#', $matches[2], $match) ? (float) $match[1] : NULL
-			);
-
-			preg_match('#prefix=([^\s&]+)#', $matches[2], $match) && $this->_key_prefix = $match[1];
+			$save_path = array('path' => $matches[1]);
 		}
-		elseif (preg_match('#(?:tcp://)?([^:?]+)(?:\:(\d+))?(\?.+)?#', $this->_config['save_path'], $matches))
+		elseif (preg_match('#(?:tcp://)?([^:?]+)(?:\:(\d+))?(?<options>\?.+)?#', $this->_config['save_path'], $matches))
 		{
-			isset($matches[3]) OR $matches[3] = '';
-			$this->_config['save_path'] = array(
-				'type' => 'tcp',
-				'host' => $matches[1],
-				'port' => empty($matches[2]) ? NULL : $matches[2],
-				'password' => preg_match('#auth=([^\s&]+)#', $matches[3], $match) ? $match[1] : NULL,
-				'database' => preg_match('#database=(\d+)#', $matches[3], $match) ? (int) $match[1] : NULL,
-				'timeout' => preg_match('#timeout=(\d+\.\d+)#', $matches[3], $match) ? (float) $match[1] : NULL
+			$save_path = array(
+				'host'    => $matches[1],
+				'port'    => empty($matches[2]) ? NULL : $matches[2],
+				'timeout' => NULL // We always pass this to Redis::connect(), so it needs to exist
 			);
-
-			preg_match('#prefix=([^\s&]+)#', $matches[3], $match) && $this->_key_prefix = $match[1];
 		}
 		else
 		{
 			log_message('error', 'Session: Invalid Redis save path format: '.$this->_config['save_path']);
 		}
 
-		if ($this->_config['match_ip'] === TRUE)
+		if (isset($save_path))
 		{
-			$this->_key_prefix .= $_SERVER['REMOTE_ADDR'].':';
+			if (isset($matches['options']))
+			{
+				$save_path['password'] = preg_match('#auth=([^\s&]+)#', $matches['options'], $match) ? $match[1] : NULL;
+				$save_path['database'] = preg_match('#database=(\d+)#', $matches['options'], $match) ? (int) $match[1] : NULL;
+				$save_path['timeout']  = preg_match('#timeout=(\d+\.\d+)#', $matches['options'], $match) ? (float) $match[1] : NULL;
+
+				preg_match('#prefix=([^\s&]+)#', $matches['options'], $match) && $this->_key_prefix = $match[1];
+			}
+
+			$this->_config['save_path'] = $save_path;
+
+			if ($this->_config['match_ip'] === TRUE)
+			{
+				$this->_key_prefix .= $_SERVER['REMOTE_ADDR'].':';
+			}
 		}
 	}
 
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Open (from commit 7ec458b45316b9f270e1e03de498244f71c605ea on branch develop)
+	 *
+	 * Sanitizes save_path and initializes connection.
+	 *
+	 * @param	string	$save_path	Server path
+	 * @param	string	$name		Session cookie name, unused
+	 * @return	bool
+	 */
 	public function open($save_path, $name)
 	{
 		if (empty($this->_config['save_path']))
 		{
-			return FALSE;
+			return $this->_fail();
 		}
 
-		$connected = TRUE;
 		$redis = new Redis();
-		if ($this->_config['save_path']['type'] == 'unix')
-		{
-			if ( ! $redis->connect($this->_config['save_path']['path']))
-			{
-				log_message('error', 'Session: Unable to connect to Redis with the configured settings.');
-				$connected = FALSE;
-			}
-		}
-		elseif ( ! $redis->connect($this->_config['save_path']['host'], $this->_config['save_path']['port'], $this->_config['save_path']['timeout']))
-		{
-			log_message('error', 'Session: Unable to connect to Redis with the configured settings.');
-			$connected = FALSE;
-		}
+		$connected = isset($this->_config['save_path']['path'])
+			? $redis->connect($this->_config['save_path']['path'])
+			: $redis->connect(
+				$this->_config['save_path']['host'],
+				$this->_config['save_path']['port'],
+				$this->_config['save_path']['timeout']
+			);
 
-		if ($connected) 
+		if ($connected)
 		{
 			if (isset($this->_config['save_path']['password']) && ! $redis->auth($this->_config['save_path']['password']))
 			{
@@ -100,62 +96,80 @@ class MY_Session_redis_driver extends CI_Session_redis_driver
 			else
 			{
 				$this->_redis = $redis;
-				return TRUE;
+				return $this->_success;
 			}
 		}
+		else
+		{
+			log_message('error', 'Session: Unable to connect to Redis with the configured settings.');
+		}
 
-		return FALSE;
+		$this->php5_validate_id();
+
+		return $this->_fail();
 	}
 
-	public function read($session_id)
-	{
-		if (isset($this->_redis) && $this->_get_lock($session_id))
-		{
-			// Needed by write() to detect session_regenerate_id() calls
-			$this->_session_id = $session_id;
-			$session_data = $this->_redis->get($this->_key_prefix.$session_id);
-			is_string($session_data)
-				? $this->_key_exists = TRUE
-				: $session_data = '';
-			$this->_fingerprint = md5($session_data);
-			return $session_data;
-		}
-		return $this->_failure;
-	}
+	// ------------------------------------------------------------------------
 
-	public function write($session_id, $session_data)
+	/**
+	 * Get lock (patched for lock race condition)
+	 *
+	 * Acquires an (emulated) lock.
+	 *
+	 * @param	string	$session_id	Session ID
+	 * @return	bool
+	 */
+	protected function _get_lock($session_id)
 	{
-		if ( ! isset($this->_redis))
+		// PHP 7 reuses the SessionHandler object on regeneration,
+		// so we need to check here if the lock key is for the
+		// correct session ID.
+		if ($this->_lock_key === $this->_key_prefix.$session_id.':lock')
 		{
-			return $this->_failure;
+			return $this->_redis->setTimeout($this->_lock_key, 300);
 		}
-		// Was the ID regenerated?
-		elseif ($session_id !== $this->_session_id)
+
+		// 30 attempts to obtain a lock, in case another request already has it
+		$lock_key = $this->_key_prefix.$session_id.':lock';
+		$attempt = 0;
+		do
 		{
-			if ( ! $this->_release_lock() OR ! $this->_get_lock($session_id))
+			if (($ttl = $this->_redis->ttl($lock_key)) > 0)
 			{
-				return $this->_failure;
+				sleep(1);
+				continue;
 			}
-			$this->_key_exists = FALSE;
-			$this->_session_id = $session_id;
-		}
-		if (isset($this->_lock_key))
-		{
-			$this->_redis->setTimeout($this->_lock_key, 300);
-			if ($this->_fingerprint !== ($fingerprint = md5($session_data)) OR $this->_key_exists === FALSE)
+
+			// Patch begin
+			if ($ttl === -2 && ! $this->_redis->set($lock_key, time(), array('nx', 'ex' => 300)))
 			{
-				if ($this->_redis->set($this->_key_prefix.$session_id, $session_data, $this->_config['expiration']))
-				{
-					$this->_fingerprint = $fingerprint;
-					$this->_key_exists = TRUE;
-					return $this->_success;
-				}
-				return $this->_failure;
+				// Sleep for 1s to wait for lock releases.
+				sleep(1);
+				continue;
 			}
-			return ($this->_redis->setTimeout($this->_key_prefix.$session_id, $this->_config['expiration']))
-				? $this->_success
-				: $this->_failure;
+			elseif ( ! $this->_redis->setex($lock_key, 300, time()))
+			{
+				log_message('error', 'Session: Error while trying to obtain lock for '.$this->_key_prefix.$session_id);
+				return FALSE;
+			}
+			// Patch end
+
+			$this->_lock_key = $lock_key;
+			break;
 		}
-		return $this->_failure;
+		while (++$attempt < 30);
+
+		if ($attempt === 30)
+		{
+			log_message('error', 'Session: Unable to obtain lock for '.$this->_key_prefix.$session_id.' after 30 attempts, aborting.');
+			return FALSE;
+		}
+		elseif ($ttl === -1)
+		{
+			log_message('debug', 'Session: Lock for '.$this->_key_prefix.$session_id.' had no TTL, overriding.');
+		}
+
+		$this->_lock = TRUE;
+		return TRUE;
 	}
 }

@@ -54,6 +54,10 @@
 	$lang['finish_time'] = 'Finish Time';
 	$lang['review_order'] = 'Review Order';
 	$lang['change_expiration'] = 'Change expiration';
+	$lang['reject_order'] = 'Reject Order';
+	$lang['batch_review_pass'] = 'Batch Review Order';
+	$lang['batch_review_reject'] = 'Batch Reject Order';
+	$lang['reverse_select'] = 'Reverse Select';
 
 //pay_check
 	$lang['pay_check_message'] = 'Checking payment result...';
@@ -260,7 +264,7 @@
 	$lang['global_settings_item_key_enable_payment'] = 'Enable Payment';
 	$lang['global_settings_item_description_enable_payment'] = 'Enable Manage Item, Manage Order, Payment system, "Enable Account" on login modal, etc.';
 	$lang['global_settings_item_key_payment_auto_finish'] = 'Auto finish orders';
-	$lang['global_settings_item_description_payment_auto_finish'] = 'Orders will be finished automatically. Closing this means administrators must review all paid orders by themselves.';
+	$lang['global_settings_item_description_payment_auto_finish'] = 'Orders (other than those with price of 0.00) will be finished automatically. Closing this means administrators must review all paid orders by themselves.';
 	$lang['global_settings_item_key_expire_notify_day_num'] = 'User expiring notification';
 	$lang['global_settings_item_description_expire_notify_day_num'] = 'The expiring notification on user\'s homepage will become <span style="color:red;font-weight:bold">red</span> when it will be expired within the days beneath. The unit is day.';
 
@@ -270,8 +274,16 @@
 	$lang['global_settings_item_key_allow_custom_test'] = 'Allow Custom Test';
 	$lang['global_settings_item_description_allow_custom_test'] = 'Turn on Custom Test function';
 
+//admin_manage_user
+	$lang['set_no_expiration'] = 'No Expiration';
+	$lang['batch_change_expiration'] = 'Batch Change Expiration';
+	$lang['delete_unused_user'] = 'Delete %s unused users';
+
 //form validation
 	$lang['form_user_not_exist'] = 'User does not exist!';
+	
+	$lang['form_no_need_to_pay'] = 'This user has no need to be paid!';
+	$lang['form_order_is_reviewing'] = 'This user has an order waiting for review. Please wait or ask for the administrators.';
 
 //error text
 	$lang['error_admin_only'] = 'Only administrators are allowed!';
