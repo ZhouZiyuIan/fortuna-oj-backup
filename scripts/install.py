@@ -3,7 +3,7 @@ import re, random, string
 
 # Set default configs
 
-oj_branch = 'new-env'
+oj_branch = 'master'
 oj_name = '' # Input later
 
 config_file = [
