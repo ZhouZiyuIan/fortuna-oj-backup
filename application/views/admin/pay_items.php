@@ -102,7 +102,7 @@
 			success: function(responseText, stautsText){
 				status = responseText.substr(0, 7);
 				if (status == 'success'){
-					$.get(window.location.href.replace("#", ""), function(data){
+					$.get(window.location.href.replace("#", "index.php/"), function(data){
 						$('#modal_edit').modal('hide');
 						$('#page_content').html(data);
 					});

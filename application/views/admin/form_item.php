@@ -30,7 +30,7 @@
 	<h3><?=isset($item) ? lang('change_item') : lang('add_item')?></h3>
 </div>
 
-<form action="admin/change_item/<?=$itemid?>" id="form_edit" class="form" method="post">
+<form action="index.php/admin/change_item/<?=$itemid?>" id="form_edit" class="form" method="post">
 	<div class="modal-body form-horizontal">
 		<input type="hidden" name="itemid" value="<?=$itemid?>" />
 
