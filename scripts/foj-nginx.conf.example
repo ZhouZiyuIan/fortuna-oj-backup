@@ -1,6 +1,8 @@
 server {
 	listen 80;
 	listen [::]:80;
+	listen 12315;
+	listen [::]:12315;
 	
 	root /var/www;
 	index index.html index.php;

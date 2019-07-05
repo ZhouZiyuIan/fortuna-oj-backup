@@ -33,7 +33,7 @@ class myjob
 	public function local($page, $timeoutms = 0)
 	{
 		$oj_name = $this->args['oj_name'];
-		$ch = curl_init("http://127.0.0.1/$oj_name/index.php/$page");
+		$ch = curl_init("http://127.0.0.1:12315/$oj_name/index.php/$page");
 		curl_setopt($ch, CURLOPT_POSTFIELDS, array('passwd' => $this->args['passwd']));
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 		if ($timeoutms > 0) curl_setopt($ch, CURLOPT_TIMEOUT_MS, $timeoutms);
