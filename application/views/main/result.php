@@ -14,7 +14,7 @@
 				<h3>Message #<?=$id?></h3>
 			</div>
 			<div class="modal-body">
-				<p><?=nl2br(htmlentities($detail->message))?></p>
+				<p style="font-family: 'Courier New', Courier, monospace; font-size: 12px"><?=nl2br(htmlentities($detail->message))?></p>
 			</div>
 		</div>
 	<?php
