@@ -81,12 +81,12 @@ class Customtest extends MY_Controller {
 					$flags = ' -DONLINE_JUDGE';
 					break;
 				case 'C++':
-					$cmd = 'g++ Main.cpp -o Main';
+					$cmd = 'g++ Main.cpp -std=gnu++98 -o Main';
 					$source = 'Main.cpp';
 					$flags = ' -DONLINE_JUDGE';
 					break;
 				case 'C++11':
-					$cmd = 'g++ Main.cpp --std=c++11 -o Main';
+					$cmd = 'g++ Main.cpp -std=c++11 -o Main';
 					$source = 'Main.cpp';
 					$flags = ' -DONLINE_JUDGE';
 					break;
