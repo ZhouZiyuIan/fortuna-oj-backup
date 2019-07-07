@@ -46,6 +46,8 @@ inst_env_command = [
     ],
     [
         'Install NGINX',
+        'apt install -y software-properties-common apt-transport-https lsb-release ca-certificates',
+        'add-apt-repository -y -u ppa:nginx/stable',
         'apt install -y nginx'
     ],
     [
