@@ -16,6 +16,8 @@
 	<label>
 		ID: 
 		<input type="number" name="id" min="1000" class="input-small" />
+		~
+		<input type="number" name="idmax" min="1000" class="input-small" />
 	</label>
 	
 	<button id="btn_rejudge" class="btn btn-primary btn-small">Rejudge</button>

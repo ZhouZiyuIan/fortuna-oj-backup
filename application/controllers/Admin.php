@@ -673,7 +673,10 @@ class Admin extends MY_Controller {
 		else{
 			$data = $this->input->post(NULL, TRUE);
 			if ($data['type'] == 'submission'){
-				$this->submission->rejudge($data['id']);
+				$idmin = $data['id'];
+				$idmax = ($data['idmax']) ? $data['idmax'] : $data['id'];
+				for ($i = $idmin; $i <= $idmax; $i++)
+					$this->submission->rejudge($i);
 			}else{
 				$data = $this->problems->load_problem_submission($data['id']);
 				foreach ($data as $row)
