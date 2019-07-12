@@ -5,7 +5,7 @@
 
 <form id="form_rejudge" class="form form-inline" method="post" action="index.php/admin/rejudge">
 	<label>
-		<input type="radio" name="type" value="submission" />
+		<input type="radio" name="type" value="submission" checked />
 		Submission
 	</label>
 	<label>
