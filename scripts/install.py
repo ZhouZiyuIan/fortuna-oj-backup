@@ -65,6 +65,10 @@ inst_env_command = [
         'apt install -y php7.2-fpm php7.2-mysql php7.2-curl php7.2-gd php7.2-mbstring php7.2-xml php7.2-xmlrpc php7.2-zip php7.2-opcache php-redis'
     ],
     [
+        'Install Zip tool',
+        'apt install -y zip'
+    ],
+    [
         'Configure Redis to listen to unix socket',
         r'sed -i "s/.*unixsocket .*/unixsocket \/var\/run\/redis\/redis-server.sock/" /etc/redis/redis.conf',
         r'sed -i "s/.*unixsocketperm.*/unixsocketperm 770/" /etc/redis/redis.conf',
