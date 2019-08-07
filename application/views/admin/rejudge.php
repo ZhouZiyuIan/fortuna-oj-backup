@@ -16,8 +16,7 @@
 	<label>
 		ID: 
 		<input type="number" name="id" min="1000" class="input-small" />
-		~
-		<input type="number" name="idmax" min="1000" class="input-small" />
+		<span id="idmaxInput">~<input type="number" name="idmax" min="1000" class="input-small" /></span>
 	</label>
 	
 	<button id="btn_rejudge" class="btn btn-primary btn-small">Rejudge</button>
@@ -25,12 +24,12 @@
 
 <script type="text/javascript">
 	$(document).ready(function(){
-		$('#input[type=radio][name=type]').change(function() {
-			$('#input[name=idmax]').toggle(this.value == 'submission');
+		$('input[type=radio][name=type]').change(function() {
+			$('#idmaxInput').toggle(this.value == 'submission');
 		})
 
-		$('#input[name=id]').change(function() {
-			$('#input[name=idmax]').val(this.value);
+		$('input[name=id]').on('input propertychange', function() {
+			$('input[name=idmax]').val(this.value);
 		})
 
 		$("#btn_rejudge").click(function(){
