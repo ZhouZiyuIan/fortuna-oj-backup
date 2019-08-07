@@ -25,6 +25,14 @@
 
 <script type="text/javascript">
 	$(document).ready(function(){
+		$('#input[type=radio][name=type]').change(function() {
+			$('#input[name=idmax]').toggle(this.value == 'submission');
+		})
+
+		$('#input[name=id]').change(function() {
+			$('#input[name=idmax]').val(this.value);
+		})
+
 		$("#btn_rejudge").click(function(){
 			$("#btn_rejudge").addClass('disabled');
 			$("#form_rejudge").ajaxSubmit({
