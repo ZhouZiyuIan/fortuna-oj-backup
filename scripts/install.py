@@ -83,6 +83,11 @@ inst_env_command = [
     [
         'Configure PHP',
         r'sed -i "s/.*env\[PATH\].*/env\[PATH\] = \/usr\/local\/bin:\/usr\/bin:\/bin/" /etc/php/7.2/fpm/pool.d/www.conf',
+        r'sed -i "s/pm.max_children.*/pm.max_children = 1200/" /etc/php/7.2/fpm/pool.d/www.conf',
+        r'sed -i "s/pm.start_servers.*/pm.start_servers = 64/" /etc/php/7.2/fpm/pool.d/www.conf',
+        r'sed -i "s/pm.min_spare_servers.*/pm.min_spare_servers = 32/" /etc/php/7.2/fpm/pool.d/www.conf',
+        r'sed -i "s/pm.max_spare_servers.*/pm.max_spare_servers = 128/" /etc/php/7.2/fpm/pool.d/www.conf',
+        r'sed -i "s/pm.max_requests.*/pm.max_requests = 5000/" /etc/php/7.2/fpm/pool.d/www.conf',
         r'sed -i "s/post_max_size.*/post_max_size = 72M/" /etc/php/7.2/fpm/php.ini',
         r'sed -i "s/upload_max_filesize.*/upload_max_filesize = 64M/" /etc/php/7.2/fpm/php.ini',
         'service php7.2-fpm restart'
