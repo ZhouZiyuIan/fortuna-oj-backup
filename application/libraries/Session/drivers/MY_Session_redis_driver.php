@@ -126,7 +126,7 @@ class MY_Session_redis_driver extends CI_Session_redis_driver
 		// correct session ID.
 		if ($this->_lock_key === $this->_key_prefix.$session_id.':lock')
 		{
-			return $this->_redis->setTimeout($this->_lock_key, 300);
+			return $this->_expire($this->_lock_key, 300);
 		}
 
 		// 30 attempts to obtain a lock, in case another request already has it
