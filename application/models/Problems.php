@@ -556,12 +556,12 @@ class Problems extends CI_Model{
 			}
 		}
 
-		$redis->set($pid, '', array('ex'=>120));
+		$redis->set($pid, '', array('ex'=>300));
 
 		if (!is_dir($datapath)) mkdir($datapath,0777,true);
 		$cwd = getcwd();
 		$rand = rand();
-		$tmpPath = "/tmp/foj/dataconf/$ojname/$pid.$rand"
+		$tmpPath = "/tmp/foj/dataconf/$ojname/$pid.$rand";
 		if (!is_dir($tmpPath)) mkdir($tmpPath,0777,true);
 		if (!chdir($tmpPath))
 		{
@@ -571,30 +571,37 @@ class Problems extends CI_Model{
 		}
 		exec('rm -r *');
 
+		$copy_back = array('init.src', 'run.src', 'make.log');
 		file_put_contents("init.src",$script_init);
 		file_put_contents("run.src",$script_run);
-		if (!copy("init.src",$datapath.'/init.src') || !copy("run.src",$datapath.'/run.src'))
-		{
-			chdir($cwd);
-			$redis->del($pid);
-			$redis->close();
-			throw new MyException('Error when copying');
-		}
 
 		$ret = 0; $out = array();
 
-		// build makefile
-		$makefile = "SPJ : yauj_judge ";
+		$executable = array('yauj_judge');
+		// scan for extra code files
 		foreach (get_filenames($datapath, TRUE) as $file)
 		{
 			if (! is_file($file)) continue;
 			$file_parts = pathinfo($file);
 			$extension = isset($file_parts['extension'])? $file_parts['extension']: '';
 			$filename = $file_parts['filename'];
-			if (in_array($extension, array('c','cpp','pas'))) $makefile .= " $filename";
+			if (in_array($extension, array('c','cpp','pas'))) {
+				$executable[] = $filename;
+				$copy_back[] = $filename;
+				$basename = $file_parts['basename'];
+				if (!copy($datapath."/$basename", $basename)) {
+					$redis->del($pid);
+					$redis->close();
+					throw new MyException('Error when copying extra code files');
+				}
+			}
 		}
-		file_put_contents("$tmpPath/makefile","$makefile\ninclude /home/judge/resource/makefile");
 
+		if (!copy($datapath.'/makefile', 'makefile')) {
+			$redis->del($pid);
+			$redis->close();
+			throw new MyException('Error when copying makefile');
+		}
 		syslog(LOG_INFO, "started compiling scripts for pid=$pid in OJ $ojname");
 		exec("make -B > make.log 2>&1", $out, $ret);
 		syslog(LOG_INFO, "ended compiling scripts for pid=$pid in OJ $ojname");
@@ -622,26 +629,18 @@ class Problems extends CI_Model{
 		$redis->del($pid);
 		$redis->close();
 
-		if (!copy("yauj_judge",$datapath.'/yauj_judge') || !copy("compile.log",$datapath.'/make.log'))
-		{
-			chdir($cwd);
-			throw new MyException('Error when copying yauj_judge and make.log');
-		}
-
-		foreach (get_filenames('.') as $file) {
-			if (!is_file($file) || $file == 'conf.log' || $file == 'err.log') continue;
-			if (!copy($file, $datapath.DIRECTORY_SEPARATOR.$file))
+		foreach ($copy_back as $file)
+			if (!copy($file, "$datapath/$file"))
 			{
 				chdir($cwd);
-				throw new MyException("Error when moving files from tmp dir to data dir");
+				throw new MyException("Error when copying files from tmp dir to data dir");
 			}
-		}
-
-		if (!chmod($datapath.'/yauj_judge', 0777))
-		{
-			chdir($cwd);
-			throw new MyException('Error when changing file mode');
-		}
+		foreach ($executable as $file)
+			if (!chmod("$datapath/$file", 0777))
+			{
+				chdir($cwd);
+				throw new MyException('Error when changing file mode');
+			}
 
 		chdir($cwd);
 		return $confCache;
