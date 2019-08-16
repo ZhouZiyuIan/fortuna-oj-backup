@@ -571,7 +571,7 @@ class Problems extends CI_Model{
 		}
 		exec('rm -r *');
 
-		$copy_back = array('init.src', 'run.src', 'make.log');
+		$copy_back = array('init.src', 'run.src', 'make.log', 'yauj_judge');
 		file_put_contents("init.src",$script_init);
 		file_put_contents("run.src",$script_run);
 
