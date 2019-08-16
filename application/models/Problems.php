@@ -525,7 +525,7 @@ class Problems extends CI_Model{
 		$pushed = $this->problems->load_pushed($pid);
 		$pushed['version'] = date('Y-M-d H:i:s');
 		$this->problems->save_pushed($pid,$pushed);
-		$handle = curl_init('http://127.0.0.1/' . $this->config->item('oj_name') . "/index.php/misc/push_data/$pid");
+		$handle = curl_init('http://127.0.0.1:12315/' . $this->config->item('oj_name') . "/index.php/misc/push_data/$pid");
 		curl_setopt($handle, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($handle, CURLOPT_TIMEOUT_MS, 1000);
 		curl_exec($handle);
@@ -534,6 +534,8 @@ class Problems extends CI_Model{
 
 	function save_script($pid, $script_init, $script_run) // this function may throw MyException
 	{
+		$this->load->helper('file');
+
 		$ojname = $this->config->item('oj_name');
 		$datapath = $this->config->item('data_path').$pid;
 
@@ -559,8 +561,9 @@ class Problems extends CI_Model{
 		if (!is_dir($datapath)) mkdir($datapath,0777,true);
 		$cwd = getcwd();
 		$rand = rand();
-		if (!is_dir("/tmp/foj/dataconf/$ojname/$pid.$rand")) mkdir("/tmp/foj/dataconf/$ojname/$pid.$rand",0777,true);
-		if (!chdir("/tmp/foj/dataconf/$ojname/$pid.$rand"))
+		$tmpPath = "/tmp/foj/dataconf/$ojname/$pid.$rand"
+		if (!is_dir($tmpPath)) mkdir($tmpPath,0777,true);
+		if (!chdir($tmpPath))
 		{
 			$redis->del($pid);
 			$redis->close();
@@ -579,13 +582,25 @@ class Problems extends CI_Model{
 		}
 
 		$ret = 0; $out = array();
-		file_put_contents("/tmp/foj/dataconf/$ojname/$pid.$rand/makefile","include /home/judge/resource/makefile");
+
+		// build makefile
+		$makefile = "SPJ : yauj_judge ";
+		foreach (get_filenames($datapath, TRUE) as $file)
+		{
+			if (! is_file($file)) continue;
+			$file_parts = pathinfo($file);
+			$extension = isset($file_parts['extension'])? $file_parts['extension']: '';
+			$filename = $file_parts['filename'];
+			if (in_array($extension, array('c','cpp','pas'))) $makefile .= " $filename";
+		}
+		file_put_contents("$tmpPath/makefile","$makefile\ninclude /home/judge/resource/makefile");
+
 		syslog(LOG_INFO, "started compiling scripts for pid=$pid in OJ $ojname");
-		exec("make -B > compile.log 2>&1", $out, $ret);
+		exec("make -B > make.log 2>&1", $out, $ret);
 		syslog(LOG_INFO, "ended compiling scripts for pid=$pid in OJ $ojname");
 		if ($ret)
 		{
-			$err = file_get_contents('compile.log');
+			$err = file_get_contents('make.log');
 			chdir($cwd);
 			$redis->del($pid);
 			$redis->close();
@@ -611,6 +626,15 @@ class Problems extends CI_Model{
 		{
 			chdir($cwd);
 			throw new MyException('Error when copying yauj_judge and make.log');
+		}
+
+		foreach (get_filenames('.') as $file) {
+			if (!is_file($file) || $file == 'conf.log' || $file == 'err.log') continue;
+			if (!copy($file, $datapath.DIRECTORY_SEPARATOR.$file))
+			{
+				chdir($cwd);
+				throw new MyException("Error when moving files from tmp dir to data dir");
+			}
 		}
 
 		if (!chmod($datapath.'/yauj_judge', 0777))
