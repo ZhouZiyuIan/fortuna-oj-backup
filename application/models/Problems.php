@@ -525,7 +525,7 @@ class Problems extends CI_Model{
 		$pushed = $this->problems->load_pushed($pid);
 		$pushed['version'] = date('Y-M-d H:i:s');
 		$this->problems->save_pushed($pid,$pushed);
-		$handle = curl_init('http://127.0.0.1/' . $this->config->item('oj_name') . "/index.php/misc/push_data/$pid");
+		$handle = curl_init('http://127.0.0.1:12315/' . $this->config->item('oj_name') . "/index.php/misc/push_data/$pid");
 		curl_setopt($handle, CURLOPT_RETURNTRANSFER, TRUE);
 		curl_setopt($handle, CURLOPT_TIMEOUT_MS, 1000);
 		curl_exec($handle);
@@ -534,6 +534,8 @@ class Problems extends CI_Model{
 
 	function save_script($pid, $script_init, $script_run) // this function may throw MyException
 	{
+		$this->load->helper('file');
+
 		$ojname = $this->config->item('oj_name');
 		$datapath = $this->config->item('data_path').$pid;
 
@@ -554,13 +556,14 @@ class Problems extends CI_Model{
 			}
 		}
 
-		$redis->set($pid, '', array('ex'=>120));
+		$redis->set($pid, '', array('ex'=>300));
 
 		if (!is_dir($datapath)) mkdir($datapath,0777,true);
 		$cwd = getcwd();
 		$rand = rand();
-		if (!is_dir("/tmp/foj/dataconf/$ojname/$pid.$rand")) mkdir("/tmp/foj/dataconf/$ojname/$pid.$rand",0777,true);
-		if (!chdir("/tmp/foj/dataconf/$ojname/$pid.$rand"))
+		$tmpPath = "/tmp/foj/dataconf/$ojname/$pid.$rand";
+		if (!is_dir($tmpPath)) mkdir($tmpPath,0777,true);
+		if (!chdir($tmpPath))
 		{
 			$redis->del($pid);
 			$redis->close();
@@ -568,24 +571,43 @@ class Problems extends CI_Model{
 		}
 		exec('rm -r *');
 
+		$copy_back = array('init.src', 'run.src', 'make.log', 'yauj_judge');
 		file_put_contents("init.src",$script_init);
 		file_put_contents("run.src",$script_run);
-		if (!copy("init.src",$datapath.'/init.src') || !copy("run.src",$datapath.'/run.src'))
-		{
-			chdir($cwd);
-			$redis->del($pid);
-			$redis->close();
-			throw new MyException('Error when copying');
-		}
 
 		$ret = 0; $out = array();
-		file_put_contents("/tmp/foj/dataconf/$ojname/$pid.$rand/makefile","include /home/judge/resource/makefile");
+
+		$executable = array('yauj_judge');
+		// scan for extra code files
+		foreach (get_filenames($datapath, TRUE) as $file)
+		{
+			if (! is_file($file)) continue;
+			$file_parts = pathinfo($file);
+			$extension = isset($file_parts['extension'])? $file_parts['extension']: '';
+			$filename = $file_parts['filename'];
+			if (in_array($extension, array('c','cpp','pas'))) {
+				$executable[] = $filename;
+				$copy_back[] = $filename;
+				$basename = $file_parts['basename'];
+				if (!copy($datapath."/$basename", $basename)) {
+					$redis->del($pid);
+					$redis->close();
+					throw new MyException('Error when copying extra code files');
+				}
+			}
+		}
+
+		if (!copy($datapath.'/makefile', 'makefile')) {
+			$redis->del($pid);
+			$redis->close();
+			throw new MyException('Error when copying makefile');
+		}
 		syslog(LOG_INFO, "started compiling scripts for pid=$pid in OJ $ojname");
-		exec("make -B > compile.log 2>&1", $out, $ret);
+		exec("make -B > make.log 2>&1", $out, $ret);
 		syslog(LOG_INFO, "ended compiling scripts for pid=$pid in OJ $ojname");
 		if ($ret)
 		{
-			$err = file_get_contents('compile.log');
+			$err = file_get_contents('make.log');
 			chdir($cwd);
 			$redis->del($pid);
 			$redis->close();
@@ -607,17 +629,18 @@ class Problems extends CI_Model{
 		$redis->del($pid);
 		$redis->close();
 
-		if (!copy("yauj_judge",$datapath.'/yauj_judge') || !copy("compile.log",$datapath.'/make.log'))
-		{
-			chdir($cwd);
-			throw new MyException('Error when copying yauj_judge and make.log');
-		}
-
-		if (!chmod($datapath.'/yauj_judge', 0777))
-		{
-			chdir($cwd);
-			throw new MyException('Error when changing file mode');
-		}
+		foreach ($copy_back as $file)
+			if (!copy($file, "$datapath/$file"))
+			{
+				chdir($cwd);
+				throw new MyException("Error when copying files from tmp dir to data dir");
+			}
+		foreach ($executable as $file)
+			if (!chmod("$datapath/$file", 0777))
+			{
+				chdir($cwd);
+				throw new MyException('Error when changing file mode');
+			}
 
 		chdir($cwd);
 		return $confCache;
