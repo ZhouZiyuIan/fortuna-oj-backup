@@ -612,7 +612,7 @@ CREATE TABLE `User` (
 	`identifier` varchar(128) CHARACTER SET utf8 DEFAULT NULL,
 	`permission` varchar(256) CHARACTER SET utf8 DEFAULT '',
 	`verificationKey` varchar(32) CHARACTER SET utf8 DEFAULT NULL,
-	`blogURL` varchar(256) CHARACTER SET utf8 NOT NULL,
+	`blogURL` varchar(256) CHARACTER SET utf8 DEFAULT '',
 	`expiration` datetime DEFAULT NULL,
 	PRIMARY KEY (`uid`),
 	UNIQUE KEY `name_UNIQUE` (`name`),
