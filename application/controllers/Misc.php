@@ -288,6 +288,7 @@ class Misc extends MY_Controller {
 		$contests = $this->db->select('cid')->where("endTime>='$start' AND endTime<='$now'")->get('Contest')->result();
 		foreach ($contests as $row) {
 			$cid = $row->cid;
+			$this->db->query("CALL upd_ac_count_cid($cid)");
 			$problems = $this->db->select('pid')->where('cid', $cid)->get('Contest_has_ProblemSet')->result();
 			foreach ($problems as $prob) {
 				$pid = $prob->pid;
