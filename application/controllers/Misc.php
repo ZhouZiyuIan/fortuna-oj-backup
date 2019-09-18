@@ -12,7 +12,7 @@ class Misc extends MY_Controller {
 	public function _remap($method, $params = array()){
 		$this->load->model('user');
 		
-		$allowed_methods = array('reset_password', 'push_data', 'push_submission', 'serverstatus');
+		$allowed_methods = array('reset_password', 'push_data', 'push_submission', 'serverstatus', 'daemon');
 		if ($this->user->is_logged_in() || in_array($method, $allowed_methods))
 			$this->_redirect_page($method, $params);
 		else
@@ -187,7 +187,10 @@ class Misc extends MY_Controller {
 		ignore_user_abort(true);
 		set_time_limit(0);
 		fastcgi_finish_request();
-		if ($this->input->post('passwd') != $this->config->item('local_passwd')) exit('passwd wrong');
+		if ($this->input->post('passwd') != $this->config->item('local_passwd')) {
+			log_message('error', 'push_submission: passwd wrong');
+			exit;
+		}
 		$get = $this->input->get();
 		$server = $get['server'];
 		$this->load->model('submission');
@@ -265,6 +268,40 @@ class Misc extends MY_Controller {
 			'codeLength' => $codeLength,
 			'pushTime' => $get['push_time']
 		));
+	}
+
+	public function daemon()
+	{
+		ignore_user_abort(true);
+		set_time_limit(0);
+		// fastcgi_finish_request();
+		
+		$ip = $this->input->ip_address();
+		if ($ip !== '127.0.0.1') {
+			log_message('error', "daemon: $ip tried to access and was denied");
+			fastcgi_finish_request();
+			exit;
+		}
+
+		$start = date('Y-m-d H:i:s', time() - 600);
+		$now = date('Y-m-d H:i:s');
+		$contests = $this->db->select('cid')->where("endTime>='$start' AND endTime<='$now'")->get('Contest')->result();
+		foreach ($contests as $row) {
+			$cid = $row->cid;
+			$this->db->query("CALL upd_ac_count_cid($cid)");
+			$problems = $this->db->select('pid')->where('cid', $cid)->get('Contest_has_ProblemSet')->result();
+			foreach ($problems as $prob) {
+				$pid = $prob->pid;
+				$this->db->where('pid', $pid)->update('ProblemSet', array('isShowed' => 1));
+			}
+		}
+
+		// Check users expiration
+		$this->db->where("expiration>='$start' AND expiration<='$now'")->set('isEnabled', 0)->update('User');
+
+		// Check orders expiration
+		$hourago = date('Y-m-d H:i:s', time() - 3600);
+		$this->db->where('status', 0)->where("createTime<='$hourago'")->update('Orders', array('status' => -1));
 	}
 
 	public function serverstatus($pid)

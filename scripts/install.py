@@ -10,7 +10,6 @@ config_file = [
     '/overriding_config/local.php',
     '/overriding_config/secret.php',
     '/scripts/init-db.sql',
-    '/application/daemon.php',
     '/scripts/foj-nginx.conf',
     '/scripts/yaujpushd',
     '/scripts/daemon.json'
@@ -202,7 +201,7 @@ execute_command_block([
 
 execute_command_block([
     'Setup services and daemons',
-    'echo "*/1 * * * * php /var/www/%s/application/daemon.php" | crontab -u www-data -' % (oj_name),
+    'echo "*/1 * * * * curl http://localhost:12315/%s/misc/daemon" | crontab -u www-data -' % (oj_name),
     'mkdir -p /etc/yauj',
     'mv /var/www/%s/scripts/daemon.json /etc/yauj/' % (oj_name),
     'chown root:root /etc/yauj/daemon.json',
