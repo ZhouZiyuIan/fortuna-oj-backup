@@ -179,7 +179,7 @@ execute_command_block([
     'Get fortuna-oj from GitHub',
     'mkdir -p /var/www/' + oj_name,
     'chown www-data:www-data /var/www/' + oj_name,
-    'sudo -u www-data git clone --depth=1 -b %s https://bgithub.xyz/dhyfy/fortuna-oj /var/www/%s' % (oj_branch, oj_name)
+    'sudo -u www-data git clone --depth=1 -b %s https://bgithub.xyz/ZhouZiyuIan/fortuna-oj-backup /var/www/%s' % (oj_branch, oj_name)
 ])
 
 output_bar("Create local settings")
