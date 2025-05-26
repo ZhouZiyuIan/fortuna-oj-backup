@@ -101,7 +101,7 @@ inst_env_command = [
     ],
     [
         'Install vfk\'s sandbox',
-        'git clone --depth=1 https://bgithub.xyz/roastduck/vfk_uoj_sandbox /home/judge/src/vfk_uoj_sandbox',
+        'git clone --depth=1 https://bgithub.xyz/mchobbylong/vfk_uoj_sandbox /home/judge/src/vfk_uoj_sandbox',
         'cd /home/judge/src/vfk_uoj_sandbox && make',
         'cd /home/judge/src/vfk_uoj_sandbox && make install'
     ]
