@@ -94,14 +94,14 @@ inst_env_command = [
     [
         'Install YAUJ from GitHub',
         'mkdir -p /home/judge/src',
-        'git clone --depth=1 https://bgithub.xyz/roastduck/YAUJ /home/judge/src/yauj',
+        'git clone --depth=1 https://github.com/roastduck/YAUJ /home/judge/src/yauj',
         '/home/judge/src/yauj/initenv_jammy.sh',
         'cd /home/judge/src/yauj && make',
         'cd /home/judge/src/yauj && make install',
     ],
     [
         'Install vfk\'s sandbox',
-        'git clone --depth=1 https://bgithub.xyz/roastduck/vfk_uoj_sandbox /home/judge/src/vfk_uoj_sandbox',
+        'git clone --depth=1 https://github.com/roastduck/vfk_uoj_sandbox /home/judge/src/vfk_uoj_sandbox',
         'cd /home/judge/src/vfk_uoj_sandbox && make',
         'cd /home/judge/src/vfk_uoj_sandbox && make install'
     ]
@@ -179,7 +179,7 @@ execute_command_block([
     'Get fortuna-oj from GitHub',
     'mkdir -p /var/www/' + oj_name,
     'chown www-data:www-data /var/www/' + oj_name,
-    'sudo -u www-data git clone --depth=1 -b %s https://bgithub.xyz/ZhouZiyuIan/fortuna-oj-backup /var/www/%s' % (oj_branch, oj_name)
+    'sudo -u www-data git clone --depth=1 -b %s https://github.com/ZhouZiyuIan/fortuna-oj-backup /var/www/%s' % (oj_branch, oj_name)
 ])
 
 output_bar("Create local settings")
